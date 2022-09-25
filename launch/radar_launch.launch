@@ -1,0 +1,3 @@
+<launch>
+  <node name="radar_1_publisher" pkg="radar_driver" type="radar_IMEC.py" output="screen"/>
+</launch>
