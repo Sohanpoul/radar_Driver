@@ -27,7 +27,6 @@ packageLength = 1500
 TCP_IP = '192.168.100.201'
 TCP_PORT = 6172
 
-
 class radar_interface:
 
     def __init__(self, tcp_ip, UDP_PORT = 4567):
