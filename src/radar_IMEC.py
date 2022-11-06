@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-from threading import Thread
 import socket
 import sys
 import math
-import csv
 import rospy
 from radar_driver.msg import radar
 from datetime import datetime
@@ -24,8 +22,8 @@ max_msg_size = 8
 packageLength = 1500
 
 
-TCP_IP = '192.168.100.201'
 TCP_PORT = 6172
+
 
 class radar_interface:
 
@@ -118,18 +116,16 @@ class radar_interface:
         azimuth_pdat = []
         elevation_pdat = []
         magnitude_pdat = []
+        radar_target = []
+        distance_x = []
+        distance_y = []
         # distance_tdat = []
         # speed_tdat = []
         # azimuth_tdat = []
         # elevation_tdat = []
         # magnitude_tdat = []
         # radar_data = []
-        radar_target = []
-        radar_distance = []
-        radar_speed = []
-        radar_azimuth = []
-        radar_elevation = []
-        radar_magnitude = []
+
 
 
 
@@ -155,40 +151,14 @@ class radar_interface:
                  elevation_pdat[target],
                  magnitude_pdat[target]])
             radar_target.append(target)
-            radar_distance.append(distance_pdat[target])
-            radar_speed.append(speed_pdat[target])
-            radar_azimuth.append(azimuth_pdat[target])
-            radar_elevation.append(elevation_pdat[target])
-            radar_magnitude.append(magnitude_pdat[target])
             
+        for target in range(0, numberoftrackedtargets):
+            distance_x.append(distance_pdat[target] * math.sin(azimuth_pdat[target]) / 100)
+            distance_y.append(distance_pdat[target] * math.cos(azimuth_pdat[target]) / 100)    
 
 
-        return [radar_target, radar_distance, radar_speed, radar_azimuth, radar_elevation, radar_magnitude]
-        # get distance [cm], speed [km/h*100] and azimuth angle [degree*100] of the tracked targets by convert tdat data into uint16/int16
-        # for target in range(0, numberoftrackedtargets):
-        #     distance_tdat.append(
-        #         int.from_bytes(tdat_data[10 * target:10 * target + 2], byteorder='little', signed=False))
-        #     speed_tdat.append(
-        #         int.from_bytes(tdat_data[10 * target + 2:10 * target + 4], byteorder='little', signed=True) / 100)
-        #     azimuth_tdat.append(
-        #         math.radians(
-        #             int.from_bytes(tdat_data[10 * target + 4:10 * target + 6], byteorder='little',
-        #                            signed=True) / 100))
-        #     elevation_tdat.append(
-        #         math.radians(
-        #             int.from_bytes(tdat_data[10 * target + 6:10 * target + 8], byteorder='little',
-        #                            signed=True) / 100))
-        #     magnitude_tdat.append(
-        #         int.from_bytes(tdat_data[10 * target + 8:10 * target + 10], byteorder='little', signed=False))
-        #     t1 = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
+        return [radar_target, distance_pdat, speed_pdat, distance_x,distance_y]
 
-
-
-        #     self.array_tdat.append(
-        #        [t1, target, distance_pdat[target], speed_pdat[target], azimuth_pdat[target],
-        #         elevation_pdat[target],
-        #         magnitude_pdat[target]])
-        #     #print(array_tdat)
 
     def stop(self):
         payloadlength = (0).to_bytes(4, byteorder='little')
@@ -209,13 +179,15 @@ class radar_interface:
         self.sockUDP.close()
 
 def main():
-    radar1 = radar_interface(TCP_IP, 4567)
-    ctr = 1
-
     # ROS Startup
-    rospy.init_node('radar_1_publisher', anonymous=True)
-    radar1_pub = rospy.Publisher("/radar_1", radar, queue_size=10)
+    rospy.init_node('radar_publisher', anonymous=True)
+    node_name = rospy.get_name()
+    TCP_IP = rospy.get_param(node_name+'/TCP_IP')
+    port = rospy.get_param(node_name+'/port')   
+    radar1_pub = rospy.Publisher(node_name, radar, queue_size=10)
     rate = rospy.Rate(10) # 10hz
+    radar1 = radar_interface(TCP_IP, port)#4567
+    ctr = 1
 
     # RADAR connect
     try:
@@ -228,10 +200,9 @@ def main():
     try:
         while not rospy.is_shutdown():
             [radar1_msg.target_id, radar1_msg.distance_dat, radar1_msg.speed_dat, \
-                radar1_msg.azimuth_dat, radar1_msg.elevation_dat, \
-                    radar1_msg.magnitude_dat] = radar1.receive_data()
+                radar1_msg.distance_x, radar1_msg.distance_y] = radar1.receive_data()
             #rospy.loginfo(radar1_msg)
-            #print(ctr)
+            print(radar1_msg.target_id)
             radar1_pub.publish(radar1_msg)
             rate.sleep()
             ctr = ctr + 1
