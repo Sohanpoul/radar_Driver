@@ -21,7 +21,7 @@
     Example - if two radar sensors set port number of first radar 4567 and second radar 4660
 
     3. To launch the driver first build the package (if not done before) and then source the setup file. Execute the command:
-        roslaunch radar_driver radar_launch.launch
+        roslaunch radar_driver radar_launch_raw.launch and/or radar_launch_track.launch
 
 # Output
     Radar data published over ROS can be viewed on the topics /radar_1 and /radar_2
@@ -29,9 +29,8 @@
         1. target_id
         2. distance
         3. speed
-        4. azimuth
-        5. elevation
-        6. magnitude
+        4. distance_x
+        5. distance_y
     More information about these data can be found on V-MD3 datasheet.
 
 
