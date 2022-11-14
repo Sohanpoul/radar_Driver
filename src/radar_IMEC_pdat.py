@@ -146,12 +146,7 @@ class radar_interface:
             magnitude_pdat.append(
                 int.from_bytes(pdat_data[10 * target + 8:10 * target + 10], byteorder='little', signed=False))
             t1 = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
-            self.array_pdat.append(
-                [t1, target, distance_pdat[target], speed_pdat[target], azimuth_pdat[target],
-                 elevation_pdat[target],
-                 magnitude_pdat[target]])
-            radar_target.append(target)
-            
+                        
         for target in range(0, numberoftrackedtargets):
             distance_x.append(distance_pdat[target] * math.sin(azimuth_pdat[target]) / 100)
             distance_y.append(distance_pdat[target] * math.cos(azimuth_pdat[target]) / 100)    
@@ -180,7 +175,7 @@ class radar_interface:
 
 def main():
     # ROS Startup
-    rospy.init_node('radar_publisher', anonymous=True)
+    rospy.init_node('radar_publisher_raw', anonymous=True)
     node_name = rospy.get_name()
     TCP_IP = rospy.get_param(node_name+'/TCP_IP')
     port = rospy.get_param(node_name+'/port')   

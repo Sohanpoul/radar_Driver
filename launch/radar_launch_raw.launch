@@ -1,5 +1,5 @@
 <launch>
-  <node name="radar_1" pkg="radar_driver" type="radar_IMEC.py" output="screen">
+  <node name="radar_raw" pkg="radar_driver" type="radar_IMEC_pdat.py" output="screen">
     <param name="TCP_IP" value = "192.168.100.201" />
     <param name="port" value = "4567" />
   </node>

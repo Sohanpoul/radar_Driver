@@ -1,0 +1,6 @@
+<launch>
+  <node name="radar_track" pkg="radar_driver" type="radar_IMEC_tdat.py" output="screen">
+    <param name="TCP_IP" value = "192.168.100.201" />
+    <param name="port" value = "4567" />
+  </node>
+</launch>
