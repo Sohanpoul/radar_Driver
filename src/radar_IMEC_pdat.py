@@ -87,6 +87,7 @@ class radar_interface:
     def receive_data(self):
         # GET PDAT DATA ---------------------------------
         pdat_data = []
+        tdat_data = []
         packageData, adr = self.sockUDP.recvfrom(packageLength)
         #print(adr)
         while packageData[0:4] != b'PDAT':  # do while header isn't expected header
@@ -131,6 +132,8 @@ class radar_interface:
 
         # get distance [cm], speed [km/h*100] and azimuth angle [degree*100] of the detected raw targets by converting pdat into uint16/int16
         for target in range(0, numberoftargets):
+            radar_target.append(target)
+
             distance_pdat.append(
                 int.from_bytes(pdat_data[10 * target:10 * target + 2], byteorder='little', signed=False))
             speed_pdat.append(
@@ -145,7 +148,7 @@ class radar_interface:
                                    signed=True) / 100))
             magnitude_pdat.append(
                 int.from_bytes(pdat_data[10 * target + 8:10 * target + 10], byteorder='little', signed=False))
-            t1 = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
+            #t1 = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
                         
         for target in range(0, numberoftrackedtargets):
             distance_x.append(distance_pdat[target] * math.sin(azimuth_pdat[target]) / 100)

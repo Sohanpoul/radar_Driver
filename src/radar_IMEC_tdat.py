@@ -128,9 +128,11 @@ class radar_interface:
 
         # get distance [cm], speed [km/h*100] and azimuth angle [degree*100] of the detected raw targets by converting pdat into uint16/int16
         for target in range(0, numberoftargets):
+            radar_target.append(target)
+
             distance_tdat.append(
                 int.from_bytes(tdat_data[10 * target:10 * target + 2], byteorder='little', signed=False))
-            speed_pdat.append(
+            speed_tdat.append(
                 int.from_bytes(tdat_data[10 * target + 2:10 * target + 4], byteorder='little', signed=True) / 100)
             azimuth_tdat.append(
                 math.radians(
@@ -150,7 +152,7 @@ class radar_interface:
             distance_y.append(distance_tdat[target] * math.cos(azimuth_tdat[target]) / 100)    
 
 
-        return [radar_target, distance_pdat, speed_tdat, distance_x,distance_y]
+        return [radar_target, distance_tdat, speed_tdat, distance_x,distance_y]
 
 
     def stop(self):
