@@ -11,28 +11,32 @@ from sklearn.pipeline import Pipeline
 import os
 import math
 import rospy
+from std_msgs.msg import Bool
 from radar_driver.msg import radar
 from timeit import default_timer as timer
 
-data = np.loadtxt('data.txt')
-labels = np.loadtxt('labels.txt')
-global dec 
 
+global dec 
+global dec_pub
 
 
 def callback(data):
     global dec
+    global dec_pub
     target_id = data.target_id
     speed_dat = data.speed_dat
     distance_x = data.distance_x
     distance_y = data.distance_y
-    scenario = np.array([arrange_data(speed_dat,distance_x, distance_y)])
+    scenario = np.array([arrange_data(speed_dat,distance_x, distance_y)])    
     #scenario = np.array([scenario])
-    decision = dec.predict(scenario)
-    rospy.loginfo(decision)
+    decision = bool(dec.predict(scenario))
+    dec_pub.publish(decision)
+
+    
 
 def arrange_data(speed_dat,distance_x, distance_y):
     d = sorted(list(zip(distance_x, distance_y, speed_dat)), key = lambda x: x[0], reverse = True)
+    
     return [d[1][0], d[1][1], d[1][2], d[0][0], d[0][1], d[0][2]] 
 
     
@@ -41,13 +45,15 @@ class decesion_loop:
         self.start = 0
         self.end = 0
         self.decision = True
+        self.data = np.loadtxt('data.txt')
+        self.labels = np.loadtxt('labels.txt')
         self.train()
         
 
     def train(self):
         for i in range(500):
             score = 0
-            train_X, val_X, train_y, val_y = train_test_split(data, labels, random_state=i)
+            train_X, val_X, train_y, val_y = train_test_split(self.data, self.labels, random_state=i)
             self.clf = Pipeline([('clf', KNeighborsClassifier()), ])
             self.clf.fit(train_X, train_y)
             predicted = self.clf.predict(val_X)
@@ -71,15 +77,14 @@ class decesion_loop:
 dec = decesion_loop()
 
 def main():
-    # rospy.init_node('Decision_algorithm', anonymous=True)
-    # #node_name = rospy.get_name()
-    # #rospy.Publisher(node_name, bool, queue_size = 10)
-    # rospy.Subscriber('chatter',radar,callback)   
-    # global dec 
+   
+    global dec_pub
     
+    rospy.init_node('radar_decision_making', anonymous=True)
     
-    rospy.init_node('listener', anonymous=True)
-    rospy.Subscriber('chatter',radar,callback)
+    rospy.Subscriber('/radar_track',radar,callback)
+    dec_pub = rospy.Publisher('/decision_making', Bool, queue_size=10)
+    rate = rospy.Rate(10) # 10hz
     rospy.spin()
 
 if __name__ == '__main__':

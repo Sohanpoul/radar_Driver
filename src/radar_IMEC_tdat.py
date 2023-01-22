@@ -145,13 +145,9 @@ class radar_interface:
             magnitude_tdat.append(
                 int.from_bytes(tdat_data[10 * target + 8:10 * target + 10], byteorder='little', signed=False))
             #t1 = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
-            
-            
-        for target in range(0, numberoftrackedtargets):
             distance_x.append(distance_tdat[target] * math.sin(azimuth_tdat[target]) / 100)
-            distance_y.append(distance_tdat[target] * math.cos(azimuth_tdat[target]) / 100)    
-
-
+            distance_y.append(distance_tdat[target] * math.cos(azimuth_tdat[target]) / 100) 
+            
         return [radar_target, distance_tdat, speed_tdat, distance_x,distance_y]
 
 

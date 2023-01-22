@@ -150,7 +150,7 @@ class radar_interface:
                 int.from_bytes(pdat_data[10 * target + 8:10 * target + 10], byteorder='little', signed=False))
             #t1 = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
                         
-        for target in range(0, numberoftrackedtargets):
+        
             distance_x.append(distance_pdat[target] * math.sin(azimuth_pdat[target]) / 100)
             distance_y.append(distance_pdat[target] * math.cos(azimuth_pdat[target]) / 100)    
 
