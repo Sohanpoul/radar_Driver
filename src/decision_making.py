@@ -14,11 +14,12 @@ import rospy
 from std_msgs.msg import Bool
 from radar_driver.msg import radar
 from timeit import default_timer as timer
-
+from nav_msgs.msg import Odometry
 
 global dec 
 global dec_pub
-
+global speed 
+speed = 0
 
 def callback(data):
     global dec
@@ -27,18 +28,28 @@ def callback(data):
     speed_dat = data.speed_dat
     distance_x = data.distance_x
     distance_y = data.distance_y
-    scenario = np.array([arrange_data(speed_dat,distance_x, distance_y)])    
-    #scenario = np.array([scenario])
-    decision = bool(dec.predict(scenario))
-    dec_pub.publish(decision)
+    try:
+        scenario = np.array([arrange_data(speed_dat,distance_x, distance_y)])
+        decision = bool(dec.predict(scenario))
+        dec_pub.publish(decision)
+    except:
+        pass
 
-    
+    #scenario = np.array([scenario])
+        
+
+def gps_callback(msg):
+    speed = msg.speed
+        
 
 def arrange_data(speed_dat,distance_x, distance_y):
+    global speed
     d = sorted(list(zip(distance_x, distance_y, speed_dat)), key = lambda x: x[0], reverse = True)
     
-    return [d[1][0], d[1][1], d[1][2], d[0][0], d[0][1], d[0][2]] 
-
+    if 0.5 <d[0][2] -speed < 5:
+        return [d[1][0], d[1][1], d[1][2], d[0][0], d[0][1], d[0][2]] 
+    else:
+        return [d[0][0], d[0][1], d[0][2]]
     
 class decesion_loop:
     def __init__(self):
@@ -51,18 +62,14 @@ class decesion_loop:
         
 
     def train(self):
-        for i in range(500):
-            score = 0
-            train_X, val_X, train_y, val_y = train_test_split(self.data, self.labels, random_state=i)
-            self.clf = Pipeline([('clf', KNeighborsClassifier()), ])
-            self.clf.fit(train_X, train_y)
-            predicted = self.clf.predict(val_X)
-            k = metrics.confusion_matrix(val_y, predicted)
-            # for k in range(0, len(val_y) - 1):
-            #     print(str(val_X[k]) + '     ' + str(val_y[k]) + '   :   ' + str(predicted[k]))
-            fscore = float(f1_score(val_y, predicted, average='weighted')) #, zero_division=1))
-            score += fscore
-        print('accuracy = ' + str(score/500))
+        
+        score = 0
+        train_X, val_X, train_y, val_y = train_test_split(self.data, self.labels, random_state=1)
+        self.clf = Pipeline([('clf', KNeighborsClassifier()), ])
+        self.clf.fit(train_X, train_y)
+        predicted = self.clf.predict(val_X)
+        k = metrics.confusion_matrix(val_y, predicted)
+        
 
     def predict(self, scenario):
         self.start = timer()
@@ -83,6 +90,7 @@ def main():
     rospy.init_node('radar_decision_making', anonymous=True)
     
     rospy.Subscriber('/radar_track',radar,callback)
+    rospy.Subscriber('/gps_data/speed',Odometry,gps_callback)
     dec_pub = rospy.Publisher('/decision_making', Bool, queue_size=10)
     rate = rospy.Rate(10) # 10hz
     rospy.spin()
