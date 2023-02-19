@@ -30,9 +30,17 @@ def callback(data):
     distance_y = data.distance_y
     try:
         scenario = np.array([arrange_data(speed_dat,distance_x, distance_y)])
-        decision = bool(dec.predict(scenario))
+        decision = bool(False)
+        #print(scenario[0][0][0],scenario[0][0][1],scenario[0][0][2],scenario[0][1][0],scenario[0][1][1],scenario[0][1][2])
+        if scenario[0][1][2] < 1:
+            decision = bool(False)
+             
+        else:
+            
+            decision = bool(dec.predict([scenario[0][0][0],scenario[0][0][1],scenario[0][0][2],scenario[0][1][0],scenario[0][1][1],scenario[0][1][2]]))
         dec_pub.publish(decision)
     except:
+        print("error")
         pass
 
     #scenario = np.array([scenario])
@@ -44,12 +52,9 @@ def gps_callback(msg):
 
 def arrange_data(speed_dat,distance_x, distance_y):
     global speed
-    d = sorted(list(zip(distance_x, distance_y, speed_dat)), key = lambda x: x[0], reverse = True)
+    d = sorted(list(zip(distance_x, distance_y, speed_dat)), key = lambda x: x[2], reverse = True)
     
-    if 0.5 <d[0][2] -speed < 5:
-        return [d[1][0], d[1][1], d[1][2], d[0][0], d[0][1], d[0][2]] 
-    else:
-        return [d[0][0], d[0][1], d[0][2]]
+    return d
     
 class decesion_loop:
     def __init__(self):
@@ -90,7 +95,7 @@ def main():
     rospy.init_node('radar_decision_making', anonymous=True)
     
     rospy.Subscriber('/radar_track',radar,callback)
-    rospy.Subscriber('/gps_data/speed',Odometry,gps_callback)
+    #rospy.Subscriber('/gps_data/speed',Odometry,gps_callback)
     dec_pub = rospy.Publisher('/decision_making', Bool, queue_size=10)
     rate = rospy.Rate(10) # 10hz
     rospy.spin()
