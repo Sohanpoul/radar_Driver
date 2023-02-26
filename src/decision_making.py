@@ -31,16 +31,19 @@ def callback(data):
     try:
         scenario = np.array([arrange_data(speed_dat,distance_x, distance_y)])
         decision = bool(False)
-        #print(scenario[0][0][0],scenario[0][0][1],scenario[0][0][2],scenario[0][1][0],scenario[0][1][1],scenario[0][1][2])
-        if scenario[0][1][2] < 1:
+        print(scenario[0][0][0],scenario[0][0][1],abs(scenario[0][0][2]),scenario[0][1][0],scenario[0][1][1],abs(scenario[0][1][2]))
+        if abs(scenario[0][1][2]) == 0.0 or abs(scenario[0][0][2]) == 0.0:
             decision = bool(False)
-             
+                
         else:
+            print("check")
             
-            decision = bool(dec.predict([scenario[0][0][0],scenario[0][0][1],scenario[0][0][2],scenario[0][1][0],scenario[0][1][1],scenario[0][1][2]]))
+            decision = bool(dec.predict([[scenario[0][0][0],scenario[0][0][1],abs(scenario[0][0][2]),scenario[0][1][0],scenario[0][1][1],abs(scenario[0][1][2])]]))
+            print("check2")
         dec_pub.publish(decision)
     except:
-        print("error")
+        #print("error")
+        decision = bool(True)
         pass
 
     #scenario = np.array([scenario])
